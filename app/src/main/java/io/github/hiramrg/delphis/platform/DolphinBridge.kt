@@ -104,6 +104,25 @@ class DolphinBridge(private val context: Context, private val prefs: Prefs) {
         }.onFailure { CrashLog.event("look not written: ${it.message}") }
     }
 
+    /**
+     * Writes the Dolphin wiki's recommended (bug-fix) settings for the game into its settings file, or,
+     * when [on] is false, takes out only the ones Delphis wrote. The player's own lines are never changed.
+     */
+    fun applyRecommended(gameId: String, on: Boolean): io.github.hiramrg.delphis.core.RecommendedSettings.Result? {
+        val tree = prefs.dolphinTreeUri ?: return null
+        val settings = io.github.hiramrg.delphis.core.RecommendedSettings.forGame(gameId)
+        return runCatching {
+            val iniPath = DolphinConfigWriter.gameIniPath(gameId)
+            val existing = readText(tree, iniPath)
+            if (existing == null && (!on || settings.isEmpty())) return@runCatching null
+            val base = existing ?: ""
+            val result = if (on) io.github.hiramrg.delphis.core.RecommendedSettings.apply(base, settings)
+            else io.github.hiramrg.delphis.core.RecommendedSettings.Result(io.github.hiramrg.delphis.core.RecommendedSettings.revert(base), emptyList(), emptyList())
+            if (result.ini != base) writeText(tree, iniPath, result.ini)
+            result
+        }.onFailure { CrashLog.event("recommended settings not written: ${it.message}") }.getOrNull()
+    }
+
     /** Creates Config/WiimoteNew.ini and GCPadNew.ini if Dolphin hasn't yet; without them Dolphin ignores per-game profiles. */
     private fun ensureBaseConfig(tree: Uri, controller: ControllerProfile) {
         for (path in DolphinConfigWriter.baseConfigPaths()) {

@@ -365,5 +365,20 @@ class IniEditor(text: String) {
         for (i in range.reversed()) if (i != range.first && lines[i].trim() == line) lines.removeAt(i)
     }
 
+    /** Section names in file order. */
+    fun sections(): List<String> = lines.map { it.trim() }.filter { it.startsWith("[") && it.endsWith("]") }.map { it.substring(1, it.length - 1) }.distinct()
+
+    /** The lines under [section] (header excluded), as written. */
+    fun lines(section: String): List<String> = sectionRange(section)?.drop(1)?.map { lines[it] }.orEmpty()
+
+    /** Drops [section] (and the blank line before it) when nothing but blank lines is left in it. */
+    fun removeSectionIfEmpty(section: String) {
+        val range = sectionRange(section) ?: return
+        if (range.drop(1).any { lines[it].isNotBlank() }) return
+        for (i in range.last downTo range.first) lines.removeAt(i)
+        if (range.first > 0 && range.first - 1 < lines.size && lines[range.first - 1].isBlank()) lines.removeAt(range.first - 1)
+        else if (range.first == 0 && lines.isNotEmpty() && lines[0].isBlank()) lines.removeAt(0)
+    }
+
     override fun toString() = lines.joinToString("\n", postfix = "\n")
 }

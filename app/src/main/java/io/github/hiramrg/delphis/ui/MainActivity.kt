@@ -715,6 +715,8 @@ class MainActivity : ComponentActivity() {
                     if (preset.controller == io.github.hiramrg.delphis.core.EmulatedController.GAMECUBE) bridge.applyScreen(gameId, prefs.screenFor(gameId))
                     // Looks: the game's post-processing shader (Wii and GameCube).
                     if (prefs.looksEnabled) bridge.applyLook(gameId, prefs.lookFor(gameId))
+                    // The Dolphin wiki's bug-fix settings for this game (off: only Delphis' own keys come out).
+                    bridge.applyRecommended(gameId, prefs.recommendedFor(gameId))
                 }
                 else bridge.applyGlobally(p1, profile)
             }

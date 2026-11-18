@@ -1462,6 +1462,12 @@ fun GameScreen(act: MainActivity, game: GameEntry) {
     fun cancelScreen() { screenBefore?.let { setScreen(it) }; lookBefore?.let { setLook(it) }; showScreen = false }
     val hasPicture = screen != null || look != null
 
+    // Recommended settings: the Dolphin wiki's bug fixes for this game, written when it starts (on by default).
+    val wikiFixes = remember(gameId) { io.github.hiramrg.delphis.core.RecommendedSettings.forGame(gameId) }
+    var wikiOn by remember(gameId) { mutableStateOf(gameId?.let { act.prefs.recommendedFor(it) } ?: true) }
+    var showWiki by remember { mutableStateOf(false) }
+    fun toggleWiki() { if (gameId == null) return; wikiOn = !wikiOn; act.prefs.setRecommendedFor(gameId, wikiOn) }
+
     // Physical buttons: A = use the preset under the ring, or Play if it's already in use; Start = Play;
     // D-pad = move the ring, X = Edit,
     // L1 = autosave on/off for this game, R1 = remember controls on/off, Y = earlier autosaves. B = Back.
@@ -1483,6 +1489,15 @@ fun GameScreen(act: MainActivity, game: GameEntry) {
                     confirmReset = null; confirmDelete = null
                 }
                 KeyEvent.KEYCODE_BUTTON_B, KeyEvent.KEYCODE_BACK, KeyEvent.KEYCODE_ESCAPE -> { confirmReset = null; confirmDelete = null }
+            }
+            return@rememberUpdatedState true
+        }
+        // Recommended settings panel: Ⓨ = on / off, Ⓐ / Ⓑ = Done; nothing else reaches the page.
+        if (showWiki) {
+            if (e.action == KeyEvent.ACTION_DOWN && e.repeatCount == 0) when (e.keyCode) {
+                KeyEvent.KEYCODE_BUTTON_Y -> toggleWiki()
+                KeyEvent.KEYCODE_BUTTON_A, KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_DPAD_CENTER,
+                KeyEvent.KEYCODE_BUTTON_B, KeyEvent.KEYCODE_BACK, KeyEvent.KEYCODE_ESCAPE -> showWiki = false
             }
             return@rememberUpdatedState true
         }
@@ -1566,6 +1581,11 @@ fun GameScreen(act: MainActivity, game: GameEntry) {
                     val parts = listOfNotNull(screen?.let { if (look != null) "▭ " + (if (it.shape == io.github.hiramrg.delphis.core.GameScreen.Shape.WIDE) "16:9" else "4:3") else "▭ " + screenChipLabel(it, screenGid, act.prefs.gcUseHack) }, look?.let { "✦ " + it.label })
                     GameChip(parts.joinToString(" · "), if (multiplayer) "L3" else "⊖") { openScreen() }
                 }
+                // The wiki's fixes for this game: "✓ 1 wiki fix" when on; tap for the list and the switch.
+                if (wikiFixes.isNotEmpty()) {
+                    val n = wikiFixes.size
+                    GameChip((if (wikiOn) "✓ " else "") + "$n wiki fix" + (if (n == 1) "" else "es"), null, on = wikiOn) { showWiki = true }
+                }
                 Spacer(Modifier.weight(1f))
                 if (canAutosave) GameChip((if (gameAutosave) "✓ " else "") + "Autosave", "L1", on = gameAutosave) { toggleGameAutosave() }
                 GameChip((if (p.rememberChoice) "✓ " else "") + "Remember", "R1", on = p.rememberChoice) { p.rememberChoice = !p.rememberChoice }
@@ -1634,6 +1654,14 @@ fun GameScreen(act: MainActivity, game: GameEntry) {
             onCancel = { confirmDelete = null }, onConfirm = { confirmDelete = null; p.deleteMine(d) },
         )
     }
+    if (showWiki && wikiFixes.isNotEmpty()) {
+        Box(Modifier.matchParentSize().background(Color.Black.copy(alpha = 0.6f)).clickable { showWiki = false })
+        RecommendedPanel(
+            game.info.title, wikiFixes, wikiOn,
+            Modifier.align(Alignment.Center).fillMaxWidth(0.62f).clickable(enabled = false) {},
+            onToggle = { toggleWiki() }, onDone = { showWiki = false },
+        )
+    }
     val sc = screen
     if (showScreen && hasPicture) PicturePanel(
         game.info.title, pictureTab, { pictureTab = it },
@@ -1641,6 +1669,37 @@ fun GameScreen(act: MainActivity, game: GameEntry) {
         look, { setLook(it) },
         onCancel = { cancelScreen() }, onDone = { showScreen = false },
     )
+    }
+}
+
+/**
+ * The game's recommended settings from the Dolphin wiki: each one in the wiki's words with its note,
+ * and the "Apply recommended settings" switch (Ⓨ). Written to Dolphin when the game starts.
+ */
+@Composable
+private fun RecommendedPanel(
+    title: String, settings: List<io.github.hiramrg.delphis.core.RecommendedSettingsTable.Setting>, on: Boolean,
+    modifier: Modifier, onToggle: () -> Unit, onDone: () -> Unit,
+) {
+    val c = LocalWii.current
+    PopupPanel("Recommended settings · $title", "Fixes from the Dolphin wiki", modifier, buttons = {
+        PanelBtn(if (on) "Turn off" else "Turn on", "Y", false, onClick = onToggle)
+        PanelBtn("Done", "A", true, onClick = onDone)
+    }) {
+        DontAskRow("Apply recommended settings", on) { onToggle() }
+        Column(Modifier.heightIn(max = 220.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            settings.forEach { s ->
+                Column(Modifier.alpha(if (on) 1f else 0.5f)) {
+                    Text((if (on) "✓ " else "") + io.github.hiramrg.delphis.core.RecommendedSettings.label(s), fontSize = 13.sp, fontWeight = FontWeight.ExtraBold, color = c.text)
+                    if (s.note.isNotBlank()) Text(s.note, fontSize = 11.5.sp, color = c.textDim, lineHeight = 14.sp)
+                }
+            }
+        }
+        Text(
+            if (on) "Written to Dolphin when the game starts. Anything you set yourself in Dolphin's game settings stays as you set it."
+            else "Off: Delphis takes out only the settings it wrote; your own Dolphin settings stay.",
+            fontSize = 11.sp, color = c.textDim, lineHeight = 14.sp,
+        )
     }
 }
 

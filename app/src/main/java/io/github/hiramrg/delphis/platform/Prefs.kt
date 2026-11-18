@@ -328,6 +328,10 @@ class Prefs(context: Context) {
         io.github.hiramrg.delphis.core.Looks.byName(sp.getString("look_$gameKey", null)) ?: defaultLook
     fun setLookFor(gameKey: String, look: io.github.hiramrg.delphis.core.Looks.Look) = sp.edit().putString("look_$gameKey", look.name).apply()
 
+    /** "Apply recommended settings" (the Dolphin wiki's fixes for this game), per game; on by default. */
+    fun recommendedFor(gameId: String): Boolean = sp.getBoolean("recommended_$gameId", true)
+    fun setRecommendedFor(gameId: String, on: Boolean) = sp.edit().putBoolean("recommended_$gameId", on).apply()
+
     fun presetFor(gameKey: String): String? = sp.getString("preset_$gameKey", null)
     fun setPresetFor(gameKey: String, presetId: String?) = sp.edit().putString("preset_$gameKey", presetId).apply()
 
