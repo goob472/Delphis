@@ -1,0 +1,72 @@
+# Fork only (goob472/Delphis, branch wiki-test-build): builds Delphis Fork, signs it with the fork's own
+# key (secrets FORK_KEYSTORE_B64 + FORK_KEYSTORE_PASSWORD) and replaces the APK in the
+# "wiki-settings-latest" release that Obtainium and the in-app updater follow.
+name: Fork release
+
+on:
+  push:
+    branches: [wiki-test-build]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fork-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: github.repository == 'goob472/Delphis'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.11.1"
+      # Fork versionCodes continue after the two hand-built releases (1 and 2).
+      - name: Version
+        run: echo "CODE=$(( ${{ github.run_number }} + 2 ))" >> "$GITHUB_ENV"
+      - name: Unit tests
+        run: gradle :app:testDebugUnitTest
+      # The release lint check (lintVital) adds minutes and isn't needed for test builds.
+      - name: Build release APK
+        run: gradle :app:assembleRelease -PversionCode=$CODE -x lintVitalAnalyzeRelease -x lintVitalReportRelease -x lintVitalRelease
+      - name: Sign
+        env:
+          KS_B64: ${{ secrets.FORK_KEYSTORE_B64 }}
+          KS_PASS: ${{ secrets.FORK_KEYSTORE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          [ -n "${KS_B64:-}" ] && [ -n "${KS_PASS:-}" ] || { echo "::error::Fork signing secrets are missing"; exit 1; }
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          KS="$RUNNER_TEMP/fork.p12"; trap 'rm -f "$KS"' EXIT
+          echo "$KS_B64" | base64 -d > "$KS"
+          mkdir dist
+          "$BT/apksigner" sign --ks "$KS" --ks-type PKCS12 --ks-key-alias delphis-wiki --ks-pass env:KS_PASS \
+            --out dist/DelphisWiki.apk app/build/outputs/apk/release/app-release-unsigned.apk
+          rm -f dist/*.idsig
+          "$BT/apksigner" verify --print-certs dist/DelphisWiki.apk | grep SHA-256
+      - name: Publish to the wiki-settings-latest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cat > notes.md <<EOF
+          Test build of Delphis with **recommended settings from the Dolphin wiki** (per-game bug fixes applied at launch, e.g. Super Mario Strikers' loading animations). Fork build, not official Delphis.
+
+          - App: **Delphis Fork** (\`io.github.hiramrg.delphis.wiki\`). It installs beside official Delphis and doesn't replace it.
+          - Signed with the fork's own key (SHA-256 c3e45727c86eb144486291844623f10416331562f659e8f26049efb99ba362a6).
+          - Its in-app updater only checks this release.
+
+          versionCode: $CODE
+          commit: $GITHUB_SHA
+          EOF
+          sed -i 's/^          //' notes.md
+          git tag -f wiki-settings-latest && git push -f origin wiki-settings-latest
+          gh release upload wiki-settings-latest dist/DelphisWiki.apk --clobber
+          gh release edit wiki-settings-latest --title "Delphis Fork (test build)" --notes-file notes.md --latest

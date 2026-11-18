@@ -2,6 +2,8 @@ name: Build APK
 
 on:
   push:
+    # Fork: wiki-test-build is built and released by fork-release.yml.
+    branches-ignore: [wiki-test-build]
   pull_request:
   workflow_dispatch:
 
