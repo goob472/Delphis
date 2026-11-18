@@ -58,7 +58,7 @@
             android:name=".ui.NowPlayingActivity"
             android:exported="false"
             android:resizeableActivity="true"
-            android:taskAffinity="io.github.hiramrg.delphis.nowplaying"
+            android:taskAffinity="io.github.hiramrg.delphis.wiki.nowplaying"
             android:launchMode="singleTask"
             android:excludeFromRecents="true"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|density|keyboard|keyboardHidden|navigation" />
@@ -67,7 +67,7 @@
             android:name=".ui.InGameMenuActivity"
             android:exported="false"
             android:resizeableActivity="true"
-            android:taskAffinity="io.github.hiramrg.delphis.ingame"
+            android:taskAffinity="io.github.hiramrg.delphis.wiki.ingame"
             android:launchMode="singleTask"
             android:excludeFromRecents="true"
             android:theme="@style/Theme.Delphis.Panel"
@@ -76,7 +76,7 @@
             android:name=".ui.MenuCompanionActivity"
             android:exported="false"
             android:resizeableActivity="true"
-            android:taskAffinity="io.github.hiramrg.delphis.menu"
+            android:taskAffinity="io.github.hiramrg.delphis.wiki.menu"
             android:launchMode="singleTask"
             android:excludeFromRecents="true"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|density|keyboard|keyboardHidden|navigation" />
@@ -84,7 +84,7 @@
             android:name=".platform.CoverActivity"
             android:exported="false"
             android:resizeableActivity="true"
-            android:taskAffinity="io.github.hiramrg.delphis.cover"
+            android:taskAffinity="io.github.hiramrg.delphis.wiki.cover"
             android:excludeFromRecents="true"
             android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen" />
         <receiver android:name=".platform.InstallReceiver" android:exported="false" />

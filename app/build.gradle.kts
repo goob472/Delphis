@@ -9,14 +9,14 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "io.github.hiramrg.delphis"
+        applicationId = "io.github.hiramrg.delphis.wiki" // Fork test build: installs beside official Delphis
         minSdk = 29          // Android 10: multi-display launching + per-display focus
         targetSdk = 34       // The AYN Thor ships Android 13
         // CI passes -PversionCode=<run number>, so every published build is newer than the last;
         // the in-app updater compares this number with the one in the GitHub release notes.
         val code = (project.findProperty("versionCode") as String?)?.toIntOrNull() ?: 1
         versionCode = code
-        versionName = "1.0.$code"
+        versionName = "wiki-$code"
     }
 
     // Release APKs are built unsigned; CI signs both APKs with apksigner (see .github/workflows/build.yml

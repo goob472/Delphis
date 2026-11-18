@@ -23,12 +23,12 @@ import java.net.URL
  */
 class Updater(private val context: Context) {
     companion object {
-        const val RELEASE_API = "https://api.github.com/repos/HiramRG/Delphis/releases/tags/latest"
-        const val RELEASE_PAGE = "https://github.com/HiramRG/Delphis/releases/tag/latest"
-        const val APK_NAME = "Delphis.apk"
-        const val ACTION_INSTALL_STATUS = "io.github.hiramrg.delphis.INSTALL_STATUS"
+        const val RELEASE_API = "https://api.github.com/repos/goob472/Delphis/releases/tags/wiki-settings-latest"
+        const val RELEASE_PAGE = "https://github.com/goob472/Delphis/releases/tag/wiki-settings-latest"
+        const val APK_NAME = "DelphisWiki.apk"
+        const val ACTION_INSTALL_STATUS = "io.github.hiramrg.delphis.wiki.INSTALL_STATUS"
         /** The newest APK, for a download in the browser. */
-        const val APK_URL = "https://github.com/HiramRG/Delphis/releases/download/latest/Delphis.apk"
+        const val APK_URL = "https://github.com/goob472/Delphis/releases/download/wiki-settings-latest/DelphisWiki.apk"
 
         /**
          * Some Android versions (e.g. Android 17 on a Galaxy Tab) refuse to let an app installed from a downloaded

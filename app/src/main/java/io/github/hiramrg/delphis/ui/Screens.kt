@@ -2654,7 +2654,7 @@ private fun GamesFolderRow(act: MainActivity, tree: android.net.Uri, onRemove: (
 }
 
 /** The launch command for frontends such as RetroHrai! (see LaunchActivity). */
-const val FRONTEND_COMMAND = "-n io.github.hiramrg.delphis/.Play -a android.intent.action.VIEW -d {file.uri}"
+const val FRONTEND_COMMAND = "-n io.github.hiramrg.delphis.wiki/io.github.hiramrg.delphis.Play -a android.intent.action.VIEW -d {file.uri}"
 
 @Composable
 private fun FrontendSettings(act: MainActivity) {
